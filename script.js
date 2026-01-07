@@ -72,11 +72,13 @@ function stop() {
   if (timerId) clearTimeout(timerId);
   timerId = null;
 
+  beatIndex = 0; // important: reset accents when restarting
+
   document.getElementById("startBtn").disabled = false;
   document.getElementById("stopBtn").disabled = true;
 }
 
-// ----- Song structure timeline -----
+// ----- Song structure + drums -----
 let structure = [];
 
 function renderTimeline() {
@@ -89,13 +91,14 @@ function renderTimeline() {
   }
 
   timelineEl.innerHTML = structure.map((s, i) => {
+    const tsText = (s.ts === 6) ? "6/8" : `${s.ts}/4`;
     return `
       <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px; margin-bottom:8px;
                   background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.10); border-radius:12px;">
         <div style="display:flex; gap:10px; align-items:baseline; flex-wrap:wrap;">
           <div style="font-weight:650;">${i+1}.</div>
           <div>${s.name}</div>
-          <div style="opacity:0.8;">(${s.measures} bars)</div>
+          <div style="opacity:0.8;">(${s.measures} bars • ${tsText})</div>
         </div>
         <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end;">
           <button data-act="drums" data-i="${i}">Edit drums</button>
@@ -107,18 +110,19 @@ function renderTimeline() {
     `;
   }).join("");
 }
+
 const DRUMS = ["Kick", "Snare", "Open Hat", "Closed Hat", "Crash"];
 
-function stepsPerMeasure() {
-  // follows selected time signature
-  // beatsPerBar is 4 for 4/4, 3 for 3/4, 6 for 6/8
-  // For /4 meters: 16ths -> 4 steps per beat
-  // For 6/8: treat each beat as an 8th -> 2 steps per beat (16th-of-8th)
-  return beatsPerBar * (beatsPerBar === 6 ? 2 : 4);
+function stepsPerMeasure(tsBeats) {
+  // /4 meters: 16ths -> 4 steps per beat
+  // 6/8: treat each beat as an 8th -> 2 steps per beat (16th-of-8th)
+  return tsBeats * (tsBeats === 6 ? 2 : 4);
 }
 
 function ensurePattern(section) {
-  const steps = section.measures * stepsPerMeasure();
+  const spm = stepsPerMeasure(section.ts);
+  const steps = section.measures * spm;
+
   if (!section.pattern) section.pattern = {};
   for (const d of DRUMS) {
     if (!Array.isArray(section.pattern[d])) section.pattern[d] = [];
@@ -129,7 +133,57 @@ function ensurePattern(section) {
       section.pattern[d].length = steps;
     }
   }
+
   section._steps = steps;
+  section._spm = spm;
+}
+
+function openDrumEditor(i) {
+  const ed = document.getElementById("drumEditor");
+  if (!ed) return;
+
+  const section = structure[i];
+  ensurePattern(section);
+
+  const steps = section._steps;
+  const spm = section._spm;
+  const tsText = (section.ts === 6) ? "6/8" : `${section.ts}/4`;
+
+  ed.style.display = "block";
+  ed.innerHTML = `
+    <div class="drumTop">
+      <div><strong>${section.name}</strong> • ${section.measures} bars • ${tsText}</div>
+      <button id="closeDrumsBtn">Close</button>
+    </div>
+
+    <div class="grid" id="grid" style="grid-template-columns: 90px repeat(${steps}, 18px);">
+      ${DRUMS.map((d) => {
+        return `
+          <div class="gridRowLabel">${d}</div>
+          ${Array.from({ length: steps }).map((_, c) => {
+            const on = section.pattern[d][c] ? "on" : "";
+            const downbeat = (c % spm === 0) ? "downbeat" : "";
+            return `<div class="cell ${on} ${downbeat}" data-drum="${d}" data-step="${c}"></div>`;
+          }).join("")}
+        `;
+      }).join("")}
+    </div>
+  `;
+
+  document.getElementById("closeDrumsBtn").addEventListener("click", () => {
+    ed.style.display = "none";
+  });
+
+  ed.querySelector("#grid").addEventListener("click", (e) => {
+    const cell = e.target.closest(".cell");
+    if (!cell) return;
+
+    const drum = cell.dataset.drum;
+    const step = Number(cell.dataset.step);
+
+    section.pattern[drum][step] = !section.pattern[drum][step];
+    cell.classList.toggle("on");
+  });
 }
 
 function wireUI() {
@@ -139,7 +193,6 @@ function wireUI() {
   const bpmLabel = document.getElementById("bpmLabel");
   const tsLabel = document.getElementById("tsLabel");
 
-  // If these are null, the script is loading too early or IDs changed.
   if (!startBtn || !stopBtn || !bpmSlider || !bpmLabel || !tsLabel) {
     console.error("Missing expected elements. Check IDs in index.html.");
     return;
@@ -171,7 +224,9 @@ function wireUI() {
     addSectionBtn.addEventListener("click", () => {
       const name = sectionSelect.value;
       const measures = Math.max(1, Math.min(128, Number(measuresInput.value || 1)));
-      const section = { name, measures, pattern: {} };
+
+      // store the current time signature ON the section
+      const section = { name, measures, ts: beatsPerBar, pattern: {} };
       ensurePattern(section);
       structure.push(section);
 
@@ -189,10 +244,10 @@ function wireUI() {
       if (Number.isNaN(i)) return;
 
       if (act === "drums") {
-      openDrumEditor(i);
-      return;
-    }
- 
+        openDrumEditor(i);
+        return;
+      }
+
       if (act === "del") structure.splice(i, 1);
       if (act === "up" && i > 0) [structure[i-1], structure[i]] = [structure[i], structure[i-1]];
       if (act === "down" && i < structure.length - 1) [structure[i+1], structure[i]] = [structure[i], structure[i+1]];
@@ -205,50 +260,3 @@ function wireUI() {
 }
 
 document.addEventListener("DOMContentLoaded", wireUI);
-
-function openDrumEditor(i) {
-  const ed = document.getElementById("drumEditor");
-  if (!ed) return;
-
-  const section = structure[i];
-  ensurePattern(section);
-
-  const steps = section._steps;
-  const spm = stepsPerMeasure();
-
-  ed.style.display = "block";
-  ed.innerHTML = `
-    <div class="drumTop">
-      <div><strong>${section.name}</strong> • ${section.measures} bars • ${beatsPerBar === 6 ? "6/8" : beatsPerBar + "/4"}</div>
-      <button id="closeDrumsBtn">Close</button>
-    </div>
-    <div class="grid" id="grid"
-      style="grid-template-columns: 90px repeat(${steps}, 18px);">
-      ${DRUMS.map((d) => {
-        return `
-          <div class="gridRowLabel">${d}</div>
-          ${Array.from({ length: steps }).map((_, c) => {
-            const on = section.pattern[d][c] ? "on" : "";
-            const downbeat = (c % spm === 0) ? "downbeat" : "";
-            return `<div class="cell ${on} ${downbeat}" data-drum="${d}" data-step="${c}"></div>`;
-          }).join("")}
-        `;
-      }).join("")}
-    </div>
-  `;
-
-  document.getElementById("closeDrumsBtn").addEventListener("click", () => {
-    ed.style.display = "none";
-  });
-
-  ed.querySelector("#grid").addEventListener("click", (e) => {
-    const cell = e.target.closest(".cell");
-    if (!cell) return;
-
-    const drum = cell.dataset.drum;
-    const step = Number(cell.dataset.step);
-
-    section.pattern[drum][step] = !section.pattern[drum][step];
-    cell.classList.toggle("on");
-  });
-}
