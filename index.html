@@ -3,48 +3,55 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Song Builder</title>
+  <title>Vocaloid Song Builder</title>
   <style>
-  body{
-    margin:0;
-    min-height:100vh;
-    background:#0b0b0f;
-    color:#eaeaf2;
-    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
-    display:flex;
-    justify-content:center;
-  }
-  .wrap{
-    width:min(900px, 92vw);
-    padding:40px 0 60px;
-    text-align:center;
-  }
-  h1{
-    margin:0 0 24px;
-    font-size:40px;
-    letter-spacing:0.5px;
-  }
-  .card{
-    margin:0 auto;
-    padding:18px;
-    background: rgba(255,255,255,0.06);
-    border:1px solid rgba(255,255,255,0.10);
-    border-radius:16px;
-    width:min(720px, 92vw);
-    text-align:left;
-  }
-  label{ display:block; margin-top:12px; }
-  button{
-    background: rgba(255,255,255,0.10);
-    color:#eaeaf2;
-    border:1px solid rgba(255,255,255,0.14);
-    border-radius:10px;
-    padding:8px 10px;
-    cursor:pointer;
-  }
-  button:disabled{ opacity:0.5; cursor:not-allowed; }
-  input[type="range"]{ width:260px; vertical-align:middle; }
-</style>
+    body{
+      margin:0;
+      min-height:100vh;
+      background:#0b0b0f;
+      color:#eaeaf2;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      display:flex;
+      justify-content:center;
+    }
+    .wrap{
+      width:min(900px, 92vw);
+      padding:40px 0 60px;
+      text-align:center;
+    }
+    h1{
+      margin:0 0 24px;
+      font-size:40px;
+      letter-spacing:0.5px;
+    }
+    .card{
+      margin:0 auto;
+      padding:18px;
+      background: rgba(255,255,255,0.06);
+      border:1px solid rgba(255,255,255,0.10);
+      border-radius:16px;
+      width:min(720px, 92vw);
+      text-align:left;
+    }
+    label{ display:block; margin-top:12px; }
+    button{
+      background: rgba(255,255,255,0.10);
+      color:#eaeaf2;
+      border:1px solid rgba(255,255,255,0.14);
+      border-radius:10px;
+      padding:8px 10px;
+      cursor:pointer;
+    }
+    button:disabled{ opacity:0.5; cursor:not-allowed; }
+    input[type="range"]{ width:260px; vertical-align:middle; }
+    select, input[type="number"]{
+      padding:6px 8px;
+      border-radius:10px;
+      background:rgba(255,255,255,0.10);
+      color:#eaeaf2;
+      border:1px solid rgba(255,255,255,0.14);
+    }
+  </style>
 </head>
 <body>
   <div class="wrap">
@@ -65,42 +72,43 @@
         <button class="ts" data-ts="3">3/4</button>
         <button class="ts" data-ts="6">6/8</button>
         <span id="tsLabel" style="margin-left:8px;">4/4</span>
-        <hr style="margin:18px 0; border:0; border-top:1px solid rgba(255,255,255,0.12);">
+      </div>
 
-<div>
-  <div style="font-weight:600; margin-bottom:8px;">Song structure</div>
+      <hr style="margin:18px 0; border:0; border-top:1px solid rgba(255,255,255,0.12);">
 
-  <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-    <label style="margin:0;">
-      Section
-      <select id="sectionSelect" style="margin-left:8px; padding:6px 8px; border-radius:10px; background:rgba(255,255,255,0.10); color:#eaeaf2; border:1px solid rgba(255,255,255,0.14);">
-        <option>Intro</option>
-        <option>Verse 1</option><option>Verse 2</option><option>Verse 3</option><option>Verse 4</option>
-        <option>Pre-chorus 1</option><option>Pre-chorus 2</option><option>Pre-chorus 3</option><option>Pre-chorus 4</option>
-        <option>Chorus 1</option><option>Chorus 2</option><option>Chorus 3</option><option>Chorus 4</option>
-        <option>Post-chorus 1</option><option>Post-chorus 2</option><option>Post-chorus 3</option><option>Post-chorus 4</option>
-        <option>Bridge</option>
-        <option>Instrumental break</option>
-        <option>Outro</option>
-      </select>
-    </label>
+      <div>
+        <div style="font-weight:600; margin-bottom:8px;">Song structure</div>
 
-    <label style="margin:0;">
-      Measures
-      <input id="measuresInput" type="number" min="1" max="128" value="8"
-        style="width:90px; margin-left:8px; padding:6px 8px; border-radius:10px; background:rgba(255,255,255,0.10); color:#eaeaf2; border:1px solid rgba(255,255,255,0.14);" />
-    </label>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+          <label style="margin:0;">
+            Section
+            <select id="sectionSelect" style="margin-left:8px;">
+              <option>Intro</option>
+              <option>Verse 1</option><option>Verse 2</option><option>Verse 3</option><option>Verse 4</option>
+              <option>Pre-chorus 1</option><option>Pre-chorus 2</option><option>Pre-chorus 3</option><option>Pre-chorus 4</option>
+              <option>Chorus 1</option><option>Chorus 2</option><option>Chorus 3</option><option>Chorus 4</option>
+              <option>Post-chorus 1</option><option>Post-chorus 2</option><option>Post-chorus 3</option><option>Post-chorus 4</option>
+              <option>Bridge</option>
+              <option>Instrumental break</option>
+              <option>Outro</option>
+            </select>
+          </label>
 
-    <button id="addSectionBtn">Add</button>
-  </div>
+          <label style="margin:0;">
+            Measures
+            <input id="measuresInput" type="number" min="1" max="128" value="8" style="width:90px; margin-left:8px;" />
+          </label>
 
-  <div id="timeline" style="margin-top:14px;"></div>
-</div>
+          <button id="addSectionBtn">Add</button>
+        </div>
+
+        <div id="timeline" style="margin-top:14px;"></div>
       </div>
     </div>
   </div>
 
   <script>
+    // ----- Metronome -----
     let ctx = null;
     let nextNoteTime = 0;
     let timerId = null;
@@ -117,7 +125,7 @@
       if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
     }
 
-    function clickclick(accent = false) {
+    function click(accent = false) {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
 
@@ -126,6 +134,9 @@
 
       gain.gain.setValueAtTime(0.0001, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + 0.001);
+      gain.gain.exponentialRampToToValueAtTime?.(0.0001, ctx.currentTime + 0.03);
+
+      // Fallback if browser doesn't like the optional chaining above
       gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.03);
 
       osc.connect(gain).connect(ctx.destination);
@@ -185,61 +196,63 @@
         beatIndex = 0;
       });
     });
+
+    // ----- Song structure timeline -----
     const timelineEl = document.getElementById("timeline");
-const sectionSelect = document.getElementById("sectionSelect");
-const measuresInput = document.getElementById("measuresInput");
-const addSectionBtn = document.getElementById("addSectionBtn");
+    const sectionSelect = document.getElementById("sectionSelect");
+    const measuresInput = document.getElementById("measuresInput");
+    const addSectionBtn = document.getElementById("addSectionBtn");
 
-let structure = [];
+    let structure = [];
 
-function renderTimeline() {
-  if (structure.length === 0) {
-    timelineEl.innerHTML = `<div style="opacity:0.75;">No sections yet. Add one above.</div>`;
-    return;
-  }
+    function renderTimeline() {
+      if (structure.length === 0) {
+        timelineEl.innerHTML = `<div style="opacity:0.75;">No sections yet. Add one above.</div>`;
+        return;
+      }
 
-  timelineEl.innerHTML = structure.map((s, i) => {
-    return `
-      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px; margin-bottom:8px;
-                  background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.10); border-radius:12px;">
-        <div style="display:flex; gap:10px; align-items:baseline;">
-          <div style="font-weight:650;">${i+1}.</div>
-          <div>${s.name}</div>
-          <div style="opacity:0.8;">(${s.measures} bars)</div>
-        </div>
-        <div style="display:flex; gap:6px;">
-          <button data-act="up" data-i="${i}" ${i===0 ? "disabled" : ""}>↑</button>
-          <button data-act="down" data-i="${i}" ${i===structure.length-1 ? "disabled" : ""}>↓</button>
-          <button data-act="del" data-i="${i}">Delete</button>
-        </div>
-      </div>
-    `;
-  }).join("");
-}
+      timelineEl.innerHTML = structure.map((s, i) => {
+        return `
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px; margin-bottom:8px;
+                      background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.10); border-radius:12px;">
+            <div style="display:flex; gap:10px; align-items:baseline;">
+              <div style="font-weight:650;">${i+1}.</div>
+              <div>${s.name}</div>
+              <div style="opacity:0.8;">(${s.measures} bars)</div>
+            </div>
+            <div style="display:flex; gap:6px;">
+              <button data-act="up" data-i="${i}" ${i===0 ? "disabled" : ""}>↑</button>
+              <button data-act="down" data-i="${i}" ${i===structure.length-1 ? "disabled" : ""}>↓</button>
+              <button data-act="del" data-i="${i}">Delete</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
 
-addSectionBtn.addEventListener("click", () => {
-  const name = sectionSelect.value;
-  const measures = Math.max(1, Math.min(128, Number(measuresInput.value || 1)));
-  structure.push({ name, measures });
-  renderTimeline();
-});
+    addSectionBtn.addEventListener("click", () => {
+      const name = sectionSelect.value;
+      const measures = Math.max(1, Math.min(128, Number(measuresInput.value || 1)));
+      structure.push({ name, measures });
+      renderTimeline();
+    });
 
-timelineEl.addEventListener("click", (e) => {
-  const btn = e.target.closest("button");
-  if (!btn) return;
+    timelineEl.addEventListener("click", (e) => {
+      const btn = e.target.closest("button");
+      if (!btn) return;
 
-  const act = btn.dataset.act;
-  const i = Number(btn.dataset.i);
-  if (Number.isNaN(i)) return;
+      const act = btn.dataset.act;
+      const i = Number(btn.dataset.i);
+      if (Number.isNaN(i)) return;
 
-  if (act === "del") structure.splice(i, 1);
-  if (act === "up" && i > 0) [structure[i-1], structure[i]] = [structure[i], structure[i-1]];
-  if (act === "down" && i < structure.length - 1) [structure[i+1], structure[i]] = [structure[i], structure[i+1]];
+      if (act === "del") structure.splice(i, 1);
+      if (act === "up" && i > 0) [structure[i-1], structure[i]] = [structure[i], structure[i-1]];
+      if (act === "down" && i < structure.length - 1) [structure[i+1], structure[i]] = [structure[i], structure[i+1]];
 
-  renderTimeline();
-});
+      renderTimeline();
+    });
 
-renderTimeline();
+    renderTimeline();
   </script>
 </body>
 </html>
