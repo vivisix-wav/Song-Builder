@@ -171,7 +171,10 @@ function wireUI() {
     addSectionBtn.addEventListener("click", () => {
       const name = sectionSelect.value;
       const measures = Math.max(1, Math.min(128, Number(measuresInput.value || 1)));
-      structure.push({ name, measures });
+      const section = { name, measures, pattern: {} };
+      ensurePattern(section);
+      structure.push(section);
+
       renderTimeline();
     });
   }
@@ -185,6 +188,11 @@ function wireUI() {
       const i = Number(btn.dataset.i);
       if (Number.isNaN(i)) return;
 
+      if (act === "drums") {
+      openDrumEditor(i);
+      return;
+    }
+ 
       if (act === "del") structure.splice(i, 1);
       if (act === "up" && i > 0) [structure[i-1], structure[i]] = [structure[i], structure[i-1]];
       if (act === "down" && i < structure.length - 1) [structure[i+1], structure[i]] = [structure[i], structure[i+1]];
@@ -197,3 +205,50 @@ function wireUI() {
 }
 
 document.addEventListener("DOMContentLoaded", wireUI);
+
+function openDrumEditor(i) {
+  const ed = document.getElementById("drumEditor");
+  if (!ed) return;
+
+  const section = structure[i];
+  ensurePattern(section);
+
+  const steps = section._steps;
+  const spm = stepsPerMeasure();
+
+  ed.style.display = "block";
+  ed.innerHTML = `
+    <div class="drumTop">
+      <div><strong>${section.name}</strong> • ${section.measures} bars • ${beatsPerBar === 6 ? "6/8" : beatsPerBar + "/4"}</div>
+      <button id="closeDrumsBtn">Close</button>
+    </div>
+    <div class="grid" id="grid"
+      style="grid-template-columns: 90px repeat(${steps}, 18px);">
+      ${DRUMS.map((d) => {
+        return `
+          <div class="gridRowLabel">${d}</div>
+          ${Array.from({ length: steps }).map((_, c) => {
+            const on = section.pattern[d][c] ? "on" : "";
+            const downbeat = (c % spm === 0) ? "downbeat" : "";
+            return `<div class="cell ${on} ${downbeat}" data-drum="${d}" data-step="${c}"></div>`;
+          }).join("")}
+        `;
+      }).join("")}
+    </div>
+  `;
+
+  document.getElementById("closeDrumsBtn").addEventListener("click", () => {
+    ed.style.display = "none";
+  });
+
+  ed.querySelector("#grid").addEventListener("click", (e) => {
+    const cell = e.target.closest(".cell");
+    if (!cell) return;
+
+    const drum = cell.dataset.drum;
+    const step = Number(cell.dataset.step);
+
+    section.pattern[drum][step] = !section.pattern[drum][step];
+    cell.classList.toggle("on");
+  });
+}
