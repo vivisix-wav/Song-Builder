@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta http-equiv="Cache-Control" content="no-store" />
   <title>Vocaloid Song Builder</title>
   <style>
     body{
@@ -126,20 +127,20 @@
     }
 
     function click(accent = false) {
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
 
-  osc.type = "square";
-  osc.frequency.value = accent ? 1200 : 800;
+      osc.type = "square";
+      osc.frequency.value = accent ? 1200 : 800;
 
-  gain.gain.setValueAtTime(0.0001, ctx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + 0.001);
-  gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.03);
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + 0.001);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.03);
 
-  osc.connect(gain).connect(ctx.destination);
-  osc.start(ctx.currentTime);
-  osc.stop(ctx.currentTime + 0.05);
-}
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.05);
+    }
 
     function schedule() {
       const lookahead = 0.1;
@@ -159,14 +160,20 @@
 
     function start() {
       ensureAudio();
-      if (ctx.state === "suspended") ctx.resume();
 
-      beatIndex = 0;
-      nextNoteTime = ctx.currentTime + 0.05;
-      schedule();
+      ctx.resume().then(() => {
+        // audible confirmation click
+        click(true);
 
-      document.getElementById("startBtn").disabled = true;
-      document.getElementById("stopBtn").disabled = false;
+        beatIndex = 0;
+        nextNoteTime = ctx.currentTime + 0.05;
+        schedule();
+
+        document.getElementById("startBtn").disabled = true;
+        document.getElementById("stopBtn").disabled = false;
+      }).catch((err) => {
+        console.error("Audio resume failed:", err);
+      });
     }
 
     function stop() {
