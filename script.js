@@ -7,28 +7,31 @@ let bpm = 120;
 let beatsPerBar = 4;
 let beatIndex = 0;
 
-const bpmSlider = document.getElementById("bpm");
-const bpmLabel = document.getElementById("bpmLabel");
-const tsLabel = document.getElementById("tsLabel");
-
 function ensureAudio() {
   if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
 }
 
+// consistent click: accent = slightly louder + higher pitch, others identical
 function click(accent = false) {
+  const t = ctx.currentTime;
+
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
 
   osc.type = "square";
-  osc.frequency.value = accent ? 1200 : 800;
+  osc.frequency.setValueAtTime(accent ? 1400 : 900, t);
 
-  gain.gain.setValueAtTime(0.0001, ctx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + 0.001);
-  gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.03);
+  const peak = accent ? 0.18 : 0.12;
+  const attack = 0.002;
+  const decay = 0.025;
+
+  gain.gain.setValueAtTime(0.0001, t);
+  gain.gain.linearRampToValueAtTime(peak, t + attack);
+  gain.gain.linearRampToValueAtTime(0.0001, t + attack + decay);
 
   osc.connect(gain).connect(ctx.destination);
-  osc.start(ctx.currentTime);
-  osc.stop(ctx.currentTime + 0.05);
+  osc.start(t);
+  osc.stop(t + attack + decay + 0.01);
 }
 
 function schedule() {
@@ -51,7 +54,7 @@ function start() {
   ensureAudio();
 
   ctx.resume().then(() => {
-    // audible confirmation click
+    // confirmation click (proves audio is unlocked)
     click(true);
 
     beatIndex = 0;
@@ -73,32 +76,13 @@ function stop() {
   document.getElementById("stopBtn").disabled = true;
 }
 
-document.getElementById("startBtn").addEventListener("click", start);
-document.getElementById("stopBtn").addEventListener("click", stop);
-
-bpmSlider.addEventListener("input", (e) => {
-  bpm = Number(e.target.value);
-  bpmLabel.textContent = String(bpm);
-});
-
-document.querySelectorAll(".ts").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    const ts = Number(btn.dataset.ts);
-    beatsPerBar = ts;
-    tsLabel.textContent = ts === 6 ? "6/8" : `${ts}/4`;
-    beatIndex = 0;
-  });
-});
-
 // ----- Song structure timeline -----
-const timelineEl = document.getElementById("timeline");
-const sectionSelect = document.getElementById("sectionSelect");
-const measuresInput = document.getElementById("measuresInput");
-const addSectionBtn = document.getElementById("addSectionBtn");
-
 let structure = [];
 
 function renderTimeline() {
+  const timelineEl = document.getElementById("timeline");
+  if (!timelineEl) return;
+
   if (structure.length === 0) {
     timelineEl.innerHTML = `<div style="opacity:0.75;">No sections yet. Add one above.</div>`;
     return;
@@ -123,26 +107,68 @@ function renderTimeline() {
   }).join("");
 }
 
-addSectionBtn.addEventListener("click", () => {
-  const name = sectionSelect.value;
-  const measures = Math.max(1, Math.min(128, Number(measuresInput.value || 1)));
-  structure.push({ name, measures });
+function wireUI() {
+  const startBtn = document.getElementById("startBtn");
+  const stopBtn = document.getElementById("stopBtn");
+  const bpmSlider = document.getElementById("bpm");
+  const bpmLabel = document.getElementById("bpmLabel");
+  const tsLabel = document.getElementById("tsLabel");
+
+  // If these are null, the script is loading too early or IDs changed.
+  if (!startBtn || !stopBtn || !bpmSlider || !bpmLabel || !tsLabel) {
+    console.error("Missing expected elements. Check IDs in index.html.");
+    return;
+  }
+
+  startBtn.addEventListener("click", start);
+  stopBtn.addEventListener("click", stop);
+
+  bpmSlider.addEventListener("input", (e) => {
+    bpm = Number(e.target.value);
+    bpmLabel.textContent = String(bpm);
+  });
+
+  document.querySelectorAll(".ts").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const ts = Number(btn.dataset.ts);
+      beatsPerBar = ts;
+      tsLabel.textContent = ts === 6 ? "6/8" : `${ts}/4`;
+      beatIndex = 0;
+    });
+  });
+
+  const sectionSelect = document.getElementById("sectionSelect");
+  const measuresInput = document.getElementById("measuresInput");
+  const addSectionBtn = document.getElementById("addSectionBtn");
+  const timelineEl = document.getElementById("timeline");
+
+  if (addSectionBtn && sectionSelect && measuresInput) {
+    addSectionBtn.addEventListener("click", () => {
+      const name = sectionSelect.value;
+      const measures = Math.max(1, Math.min(128, Number(measuresInput.value || 1)));
+      structure.push({ name, measures });
+      renderTimeline();
+    });
+  }
+
+  if (timelineEl) {
+    timelineEl.addEventListener("click", (e) => {
+      const btn = e.target.closest("button");
+      if (!btn) return;
+
+      const act = btn.dataset.act;
+      const i = Number(btn.dataset.i);
+      if (Number.isNaN(i)) return;
+
+      if (act === "del") structure.splice(i, 1);
+      if (act === "up" && i > 0) [structure[i-1], structure[i]] = [structure[i], structure[i-1]];
+      if (act === "down" && i < structure.length - 1) [structure[i+1], structure[i]] = [structure[i], structure[i+1]];
+
+      renderTimeline();
+    });
+  }
+
   renderTimeline();
-});
+}
 
-timelineEl.addEventListener("click", (e) => {
-  const btn = e.target.closest("button");
-  if (!btn) return;
-
-  const act = btn.dataset.act;
-  const i = Number(btn.dataset.i);
-  if (Number.isNaN(i)) return;
-
-  if (act === "del") structure.splice(i, 1);
-  if (act === "up" && i > 0) [structure[i-1], structure[i]] = [structure[i], structure[i-1]];
-  if (act === "down" && i < structure.length - 1) [structure[i+1], structure[i]] = [structure[i], structure[i+1]];
-
-  renderTimeline();
-});
-
-renderTimeline();
+document.addEventListener("DOMContentLoaded", wireUI);
