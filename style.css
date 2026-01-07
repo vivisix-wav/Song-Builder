@@ -90,3 +90,51 @@ select, input[type="number"]{
 .timeline{
   margin-top:14px;
 }
+.drumEditor{
+  margin-top:16px;
+  padding:14px;
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.10);
+  border-radius:14px;
+}
+
+.drumTop{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  margin-bottom:10px;
+}
+
+.grid{
+  display:grid;
+  gap:6px;
+  overflow:auto;
+  padding-bottom:4px;
+}
+
+.gridRowLabel{
+  font-size:12px;
+  opacity:0.85;
+  display:flex;
+  align-items:center;
+  padding-right:6px;
+  white-space:nowrap;
+}
+
+.cell{
+  width:18px;
+  height:18px;
+  border-radius:6px;
+  border:1px solid rgba(255,255,255,0.14);
+  background:rgba(255,255,255,0.06);
+  cursor:pointer;
+}
+
+.cell.on{
+  background:rgba(255,255,255,0.28);
+}
+
+.cell.downbeat{
+  outline:1px solid rgba(255,255,255,0.18);
+}
