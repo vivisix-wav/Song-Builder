@@ -92,12 +92,13 @@ function renderTimeline() {
     return `
       <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px; margin-bottom:8px;
                   background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.10); border-radius:12px;">
-        <div style="display:flex; gap:10px; align-items:baseline;">
+        <div style="display:flex; gap:10px; align-items:baseline; flex-wrap:wrap;">
           <div style="font-weight:650;">${i+1}.</div>
           <div>${s.name}</div>
           <div style="opacity:0.8;">(${s.measures} bars)</div>
         </div>
-        <div style="display:flex; gap:6px;">
+        <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end;">
+          <button data-act="drums" data-i="${i}">Edit drums</button>
           <button data-act="up" data-i="${i}" ${i===0 ? "disabled" : ""}>↑</button>
           <button data-act="down" data-i="${i}" ${i===structure.length-1 ? "disabled" : ""}>↓</button>
           <button data-act="del" data-i="${i}">Delete</button>
