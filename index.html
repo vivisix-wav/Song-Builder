@@ -5,30 +5,67 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Song Builder</title>
   <style>
-    body { font-family: system-ui, Arial; margin: 24px; max-width: 720px; }
-    .card { padding: 16px; border: 1px solid #ddd; border-radius: 12px; }
-    button { margin-right: 8px; margin-top: 8px; }
-    label { display:block; margin-top: 12px; }
-  </style>
+  body{
+    margin:0;
+    min-height:100vh;
+    background:#0b0b0f;
+    color:#eaeaf2;
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    display:flex;
+    justify-content:center;
+  }
+  .wrap{
+    width:min(900px, 92vw);
+    padding:40px 0 60px;
+    text-align:center;
+  }
+  h1{
+    margin:0 0 24px;
+    font-size:40px;
+    letter-spacing:0.5px;
+  }
+  .card{
+    margin:0 auto;
+    padding:18px;
+    background: rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.10);
+    border-radius:16px;
+    width:min(720px, 92vw);
+    text-align:left;
+  }
+  label{ display:block; margin-top:12px; }
+  button{
+    background: rgba(255,255,255,0.10);
+    color:#eaeaf2;
+    border:1px solid rgba(255,255,255,0.14);
+    border-radius:10px;
+    padding:8px 10px;
+    cursor:pointer;
+  }
+  button:disabled{ opacity:0.5; cursor:not-allowed; }
+  input[type="range"]{ width:260px; vertical-align:middle; }
+</style>
 </head>
 <body>
-  <h1>Song Builder</h1>
+  <div class="wrap">
+    <h1>Vocaloid Song Builder</h1>
 
-  <div class="card">
-    <button id="startBtn">Start</button>
-    <button id="stopBtn" disabled>Stop</button>
+    <div class="card">
+      <button id="startBtn">Start</button>
+      <button id="stopBtn" disabled>Stop</button>
 
-    <label>
-      Tempo: <span id="bpmLabel">120</span> BPM
-      <input id="bpm" type="range" min="60" max="200" value="120" />
-    </label>
+      <label>
+        Tempo: <span id="bpmLabel">120</span> BPM
+        <input id="bpm" type="range" min="60" max="200" value="120" />
+      </label>
 
-    <div style="margin-top:12px;">
-      Time signature:
-      <button class="ts" data-ts="4">4/4</button>
-      <button class="ts" data-ts="3">3/4</button>
-      <button class="ts" data-ts="6">6/8</button>
-      <span id="tsLabel" style="margin-left:8px;">4/4</span>
+      <div style="margin-top:12px;">
+        Time signature:
+        <button class="ts" data-ts="4">4/4</button>
+        <button class="ts" data-ts="3">3/4</button>
+        <button class="ts" data-ts="6">6/8</button>
+        <span id="tsLabel" style="margin-left:8px;">4/4</span>
+      </div>
     </div>
   </div>
 
@@ -49,7 +86,7 @@
       if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
     }
 
-    function click(accent = false) {
+    function clickclick(accent = false) {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
 
