@@ -1,1 +1,122 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Song Builder</title>
+  <style>
+    body { font-family: system-ui, Arial; margin: 24px; max-width: 720px; }
+    .card { padding: 16px; border: 1px solid #ddd; border-radius: 12px; }
+    button { margin-right: 8px; margin-top: 8px; }
+    label { display:block; margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <h1>Song Builder</h1>
 
+  <div class="card">
+    <button id="startBtn">Start</button>
+    <button id="stopBtn" disabled>Stop</button>
+
+    <label>
+      Tempo: <span id="bpmLabel">120</span> BPM
+      <input id="bpm" type="range" min="60" max="200" value="120" />
+    </label>
+
+    <div style="margin-top:12px;">
+      Time signature:
+      <button class="ts" data-ts="4">4/4</button>
+      <button class="ts" data-ts="3">3/4</button>
+      <button class="ts" data-ts="6">6/8</button>
+      <span id="tsLabel" style="margin-left:8px;">4/4</span>
+    </div>
+  </div>
+
+  <script>
+    let ctx = null;
+    let nextNoteTime = 0;
+    let timerId = null;
+
+    let bpm = 120;
+    let beatsPerBar = 4;
+    let beatIndex = 0;
+
+    const bpmSlider = document.getElementById("bpm");
+    const bpmLabel = document.getElementById("bpmLabel");
+    const tsLabel = document.getElementById("tsLabel");
+
+    function ensureAudio() {
+      if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    function click(accent = false) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = "square";
+      osc.frequency.value = accent ? 1200 : 800;
+
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + 0.001);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.03);
+
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.05);
+    }
+
+    function schedule() {
+      const lookahead = 0.1;
+      const interval = 25;
+      const secondsPerBeat = 60 / bpm;
+
+      while (nextNoteTime < ctx.currentTime + lookahead) {
+        const accent = (beatIndex % beatsPerBar) === 0;
+        click(accent);
+
+        nextNoteTime += secondsPerBeat;
+        beatIndex = (beatIndex + 1) % beatsPerBar;
+      }
+
+      timerId = setTimeout(schedule, interval);
+    }
+
+    function start() {
+      ensureAudio();
+      if (ctx.state === "suspended") ctx.resume();
+
+      beatIndex = 0;
+      nextNoteTime = ctx.currentTime + 0.05;
+      schedule();
+
+      document.getElementById("startBtn").disabled = true;
+      document.getElementById("stopBtn").disabled = false;
+    }
+
+    function stop() {
+      if (timerId) clearTimeout(timerId);
+      timerId = null;
+
+      document.getElementById("startBtn").disabled = false;
+      document.getElementById("stopBtn").disabled = true;
+    }
+
+    document.getElementById("startBtn").addEventListener("click", start);
+    document.getElementById("stopBtn").addEventListener("click", stop);
+
+    bpmSlider.addEventListener("input", (e) => {
+      bpm = Number(e.target.value);
+      bpmLabel.textContent = String(bpm);
+    });
+
+    document.querySelectorAll(".ts").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const ts = Number(btn.dataset.ts);
+        beatsPerBar = ts;
+        tsLabel.textContent = ts === 6 ? "6/8" : `${ts}/4`;
+        beatIndex = 0;
+      });
+    });
+  </script>
+</body>
+</html>
