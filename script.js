@@ -107,6 +107,30 @@ function renderTimeline() {
     `;
   }).join("");
 }
+const DRUMS = ["Kick", "Snare", "Open Hat", "Closed Hat", "Crash"];
+
+function stepsPerMeasure() {
+  // follows selected time signature
+  // beatsPerBar is 4 for 4/4, 3 for 3/4, 6 for 6/8
+  // For /4 meters: 16ths -> 4 steps per beat
+  // For 6/8: treat each beat as an 8th -> 2 steps per beat (16th-of-8th)
+  return beatsPerBar * (beatsPerBar === 6 ? 2 : 4);
+}
+
+function ensurePattern(section) {
+  const steps = section.measures * stepsPerMeasure();
+  if (!section.pattern) section.pattern = {};
+  for (const d of DRUMS) {
+    if (!Array.isArray(section.pattern[d])) section.pattern[d] = [];
+    if (section.pattern[d].length < steps) {
+      section.pattern[d].length = steps;
+      section.pattern[d].fill(false, 0);
+    } else if (section.pattern[d].length > steps) {
+      section.pattern[d].length = steps;
+    }
+  }
+  section._steps = steps;
+}
 
 function wireUI() {
   const startBtn = document.getElementById("startBtn");
