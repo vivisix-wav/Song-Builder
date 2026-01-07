@@ -65,6 +65,37 @@
         <button class="ts" data-ts="3">3/4</button>
         <button class="ts" data-ts="6">6/8</button>
         <span id="tsLabel" style="margin-left:8px;">4/4</span>
+        <hr style="margin:18px 0; border:0; border-top:1px solid rgba(255,255,255,0.12);">
+
+<div>
+  <div style="font-weight:600; margin-bottom:8px;">Song structure</div>
+
+  <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+    <label style="margin:0;">
+      Section
+      <select id="sectionSelect" style="margin-left:8px; padding:6px 8px; border-radius:10px; background:rgba(255,255,255,0.10); color:#eaeaf2; border:1px solid rgba(255,255,255,0.14);">
+        <option>Intro</option>
+        <option>Verse 1</option><option>Verse 2</option><option>Verse 3</option><option>Verse 4</option>
+        <option>Pre-chorus 1</option><option>Pre-chorus 2</option><option>Pre-chorus 3</option><option>Pre-chorus 4</option>
+        <option>Chorus 1</option><option>Chorus 2</option><option>Chorus 3</option><option>Chorus 4</option>
+        <option>Post-chorus 1</option><option>Post-chorus 2</option><option>Post-chorus 3</option><option>Post-chorus 4</option>
+        <option>Bridge</option>
+        <option>Instrumental break</option>
+        <option>Outro</option>
+      </select>
+    </label>
+
+    <label style="margin:0;">
+      Measures
+      <input id="measuresInput" type="number" min="1" max="128" value="8"
+        style="width:90px; margin-left:8px; padding:6px 8px; border-radius:10px; background:rgba(255,255,255,0.10); color:#eaeaf2; border:1px solid rgba(255,255,255,0.14);" />
+    </label>
+
+    <button id="addSectionBtn">Add</button>
+  </div>
+
+  <div id="timeline" style="margin-top:14px;"></div>
+</div>
       </div>
     </div>
   </div>
@@ -154,6 +185,61 @@
         beatIndex = 0;
       });
     });
+    const timelineEl = document.getElementById("timeline");
+const sectionSelect = document.getElementById("sectionSelect");
+const measuresInput = document.getElementById("measuresInput");
+const addSectionBtn = document.getElementById("addSectionBtn");
+
+let structure = [];
+
+function renderTimeline() {
+  if (structure.length === 0) {
+    timelineEl.innerHTML = `<div style="opacity:0.75;">No sections yet. Add one above.</div>`;
+    return;
+  }
+
+  timelineEl.innerHTML = structure.map((s, i) => {
+    return `
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px; margin-bottom:8px;
+                  background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.10); border-radius:12px;">
+        <div style="display:flex; gap:10px; align-items:baseline;">
+          <div style="font-weight:650;">${i+1}.</div>
+          <div>${s.name}</div>
+          <div style="opacity:0.8;">(${s.measures} bars)</div>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button data-act="up" data-i="${i}" ${i===0 ? "disabled" : ""}>↑</button>
+          <button data-act="down" data-i="${i}" ${i===structure.length-1 ? "disabled" : ""}>↓</button>
+          <button data-act="del" data-i="${i}">Delete</button>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+addSectionBtn.addEventListener("click", () => {
+  const name = sectionSelect.value;
+  const measures = Math.max(1, Math.min(128, Number(measuresInput.value || 1)));
+  structure.push({ name, measures });
+  renderTimeline();
+});
+
+timelineEl.addEventListener("click", (e) => {
+  const btn = e.target.closest("button");
+  if (!btn) return;
+
+  const act = btn.dataset.act;
+  const i = Number(btn.dataset.i);
+  if (Number.isNaN(i)) return;
+
+  if (act === "del") structure.splice(i, 1);
+  if (act === "up" && i > 0) [structure[i-1], structure[i]] = [structure[i], structure[i-1]];
+  if (act === "down" && i < structure.length - 1) [structure[i+1], structure[i]] = [structure[i], structure[i+1]];
+
+  renderTimeline();
+});
+
+renderTimeline();
   </script>
 </body>
 </html>
